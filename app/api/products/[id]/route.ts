@@ -12,6 +12,34 @@ function toPrismaCategory(cat?: string | null): CatalogCategory {
   return 'Lainnya' as CatalogCategory
 }
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    if (!id) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+    }
+
+    const product = await prisma.catalog.findUnique({
+      where: { id },
+    })
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, product })
+  } catch (error: unknown) {
+    console.error('GET /api/products/[id] error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -69,6 +97,47 @@ export async function PATCH(
     })
   } catch (error: unknown) {
     console.error('PATCH /api/products/[id] error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+    const user = token ? await verifyJWT(token) : null
+
+    const userRole = user?.role?.toString().toLowerCase()
+    if (!user || (userRole !== 'admin' && userRole !== 'teknisi')) {
+      return NextResponse.json({ error: 'Unauthorized/Forbidden' }, { status: 403 })
+    }
+
+    const { id } = await params
+    if (!id) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+    }
+
+    const existingProduct = await prisma.catalog.findUnique({
+      where: { id },
+    })
+
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    await prisma.catalog.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({ success: true, message: 'Product deleted successfully' })
+  } catch (error: unknown) {
+    console.error('DELETE /api/products/[id] error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal Server Error' },
       { status: 500 }
