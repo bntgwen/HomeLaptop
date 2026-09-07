@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  admin
+  teknisi
+  konsumen
+}
+
+enum ServiceStatus {
+  Diterima
+  Pengecekan
+  Perbaikan
+  Selesai
+  Pending
+  Diproses
+  Bisa_Diambil @map("Bisa Diambil")
+  Batal
+}
+
+enum CatalogCategory {
+  Laptop_Bekas @map("Laptop Bekas")
+  Sparepart
+  Aksesoris
+  Komponen
+  Lainnya
+}
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  password   String
+  name       String?
+  phone      String?
+  role       Role      @default(konsumen)
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+
+  servicesHandled Service[] @relation("TechnicianServices")
+
+  @@map("users")
+}
+
+model Customer {
+  id         String    @id @default(uuid())
+  name       String
+  phone      String    @unique
+  address    String?
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+
+  services Service[]
+
+  @@map("customers")
+}
+
+model Catalog {
+  id          String           @id @default(uuid())
+  title       String
+  category    CatalogCategory? @default(Laptop_Bekas)
+  price       Float            @default(0)
+  stock       Int              @default(1)
+  description String?
+  image_url   String?
+  image_urls  String[]         @default([])
+  created_at  DateTime         @default(now())
+  updated_at  DateTime?        @updatedAt
+
+  ticket_items TicketItem[]
+  service_logs ServiceLog[]
+
+  @@map("catalogs")
+}
+
+model Service {
+  id                String        @id @default(uuid())
+  ticket_code       String        @unique @default(cuid())
+  customer_id       String?
+  technician_id     String?
+  device_name       String
+  issue_description String?
+  status            ServiceStatus @default(Diterima)
+  created_at        DateTime      @default(now())
+  updated_at        DateTime?     @updatedAt
+
+  customer     Customer?     @relation(fields: [customer_id], references: [id], onDelete: SetNull)
+  technician   User?         @relation("TechnicianServices", fields: [technician_id], references: [id], onDelete: SetNull)
+  ticket_items TicketItem[]
+  service_logs ServiceLog[]
+
+  @@map("services")
+}
+
+model TicketItem {
+  id         String    @id @default(uuid())
+  ticket_id  String
+  catalog_id String?
+  item_name  String
+  price      Float     @default(0)
+  quantity   Int       @default(1)
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+
+  service Service  @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
+  catalog Catalog? @relation(fields: [catalog_id], references: [id], onDelete: SetNull)
+
+  @@map("ticket_items")
+}
+
+model ServiceLog {
+  id                String        @id @default(uuid())
+  service_id        String
+  status_stage      ServiceStatus @default(Diterima)
+  status_note       String?
+  sparepart_used_id String?
+  sparepart_qty     Int?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime?     @updatedAt
+
+  service   Service  @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  sparepart Catalog? @relation(fields: [sparepart_used_id], references: [id], onDelete: SetNull)
+
+  @@map("service_logs")
+}

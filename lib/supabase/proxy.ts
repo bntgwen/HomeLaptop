@@ -7,14 +7,20 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  // If the env vars are not set, skip proxy check. You can remove this
-  // once you setup the project.
   if (!hasEnvVars) {
     return supabaseResponse;
   }
 
-  // With Fluid compute, don't put this client in a global environment
-  // variable. Always create a new one on each request.
+  const pathname = request.nextUrl.pathname;
+
+  // Hanya periksa sesi jika mengakses rute yang dilindungi (/dashboard, /protected, /auth/login, /auth/sign-up)
+  const isProtectedPath = pathname.startsWith("/dashboard") || pathname.startsWith("/protected");
+  const isAuthPath = pathname === "/auth/login" || pathname === "/auth/sign-up";
+
+  if (!isProtectedPath && !isAuthPath) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
@@ -38,39 +44,41 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // IMPORTANT: If you remove getClaims() and you use server-side rendering
-  // with the Supabase client, your users may be randomly logged out.
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  // 1. Proteksi Rute /dashboard
+  if (pathname.startsWith("/dashboard")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/login";
+      url.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(url);
+    }
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+    const role = (user.user_metadata?.role as string) || "admin";
+    if (role === "konsumen" || role === "pelanggan") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/tracking";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 2. Redirect jika sudah login
+  if (user && isAuthPath) {
+    const role = (user.user_metadata?.role as string) || "admin";
+    const url = request.nextUrl.clone();
+    url.pathname = (role === "admin" || role === "teknisi") ? "/dashboard" : "/tracking";
+    return NextResponse.redirect(url);
+  }
+
+  // 3. Proteksi umum rute /protected
+  if (pathname.startsWith("/protected") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse;
 }
