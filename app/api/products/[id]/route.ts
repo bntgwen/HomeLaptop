@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { verifyJWT } from '@/lib/auth'
-import { CatalogCategory } from '@prisma/client'
+export type CatalogCategory = 'Laptop_Bekas' | 'Sparepart' | 'Aksesoris' | 'Komponen' | 'Lainnya'
 
 function toPrismaCategory(cat?: string | null): CatalogCategory {
-  if (cat === 'Laptop Bekas' || cat === 'Laptop_Bekas') return 'Laptop_Bekas' as CatalogCategory
-  if (cat === 'Sparepart') return 'Sparepart' as CatalogCategory
-  if (cat === 'Aksesoris') return 'Aksesoris' as CatalogCategory
-  if (cat === 'Komponen') return 'Komponen' as CatalogCategory
-  return 'Lainnya' as CatalogCategory
+  if (cat === 'Laptop Bekas' || cat === 'Laptop_Bekas') return 'Laptop_Bekas'
+  if (cat === 'Sparepart') return 'Sparepart'
+  if (cat === 'Aksesoris') return 'Aksesoris'
+  if (cat === 'Komponen') return 'Komponen'
+  return 'Lainnya'
 }
 
 export async function GET(

@@ -2,9 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
-import { verifyJWT } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { ServiceStatus as PrismaServiceStatus, CatalogCategory } from '@prisma/client'
+import { verifyJWT } from '@/lib/auth'
+import { ServiceStatus as PrismaServiceStatus } from '@prisma/client'
 
 export type ServiceStatus =
   | 'Diterima'
@@ -16,17 +16,19 @@ export type ServiceStatus =
   | 'Bisa Diambil'
   | 'Batal'
 
+export type CatalogCategory = 'Laptop_Bekas' | 'Sparepart' | 'Aksesoris' | 'Komponen' | 'Lainnya'
+
 function toPrismaStatus(status: ServiceStatus | string): PrismaServiceStatus {
   if (status === 'Bisa Diambil') return 'Bisa_Diambil' as PrismaServiceStatus
   return status as PrismaServiceStatus
 }
 
 function toPrismaCategory(cat?: string | null): CatalogCategory {
-  if (cat === 'Laptop Bekas') return 'Laptop_Bekas' as CatalogCategory
-  if (cat === 'Sparepart') return 'Sparepart' as CatalogCategory
-  if (cat === 'Aksesoris') return 'Aksesoris' as CatalogCategory
-  if (cat === 'Komponen') return 'Komponen' as CatalogCategory
-  return 'Lainnya' as CatalogCategory
+  if (cat === 'Laptop Bekas') return 'Laptop_Bekas'
+  if (cat === 'Sparepart') return 'Sparepart'
+  if (cat === 'Aksesoris') return 'Aksesoris'
+  if (cat === 'Komponen') return 'Komponen'
+  return 'Lainnya'
 }
 
 async function checkAuthAndRole() {
