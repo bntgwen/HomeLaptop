@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Container -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect width="496" height="496" x="8" y="8" rx="120" stroke="url(#accentGrad)" stroke-width="8" stroke-opacity="0.35"/>
+  
+  <!-- Laptop Screen Outer Frame -->
+  <rect x="96" y="105" width="320" height="215" rx="22" fill="#1e293b" stroke="url(#accentGrad)" stroke-width="12"/>
+  
+  <!-- Laptop Display Screen -->
+  <rect x="114" y="123" width="284" height="179" rx="12" fill="#090d16"/>
+
+  <!-- Service Lightning/Energy Symbol on Screen -->
+  <path d="M268 150 L216 230 H264 L244 290 L304 216 H256 L278 150 Z" fill="url(#glowGrad)"/>
+
+  <!-- Laptop Base Deck -->
+  <path d="M56 345 C56 329 70 318 86 318 H426 C442 318 456 329 456 345 L468 376 C470 384 464 392 456 392 H56 C48 392 42 384 44 376 Z" fill="url(#accentGrad)"/>
+  
+  <!-- Trackpad Notch -->
+  <rect x="220" y="328" width="72" height="7" rx="3.5" fill="#e2e8f0" fill-opacity="0.8"/>
+</svg>

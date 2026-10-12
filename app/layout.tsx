@@ -27,7 +27,9 @@ export const metadata: Metadata = {
     title: "UKK Servis",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
     apple: "/icon-192.png",
   },
 };
